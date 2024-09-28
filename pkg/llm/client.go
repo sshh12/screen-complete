@@ -21,6 +21,10 @@ const configFilename = "screen_complete.yml"
 
 type Config struct {
 	OpenAIAPIKey string `yaml:"openai_api_key"`
+	OpenAIModel string `yaml:"openai_model"`
+	AzureOpenAIEndpoint string `yaml:"azure_openai_endpoint"`
+	AzureOpenAIDeployment string `yaml:"azure_openai_deployment"`
+	AzureOpenAIAPIKey string `yaml:"azure_openai_api_key"`
 }
 func loadConfig() (*Config, error) {
 	// Try to read from the current directory
@@ -46,12 +50,77 @@ func loadConfig() (*Config, error) {
 	return &config, nil
 }
 
-func getAPIKey() string {
+func getOpenAIAPIKey() string {
 	config, err := loadConfig()
 	if err == nil && config.OpenAIAPIKey != "" {
 		return config.OpenAIAPIKey
 	}
 	return os.Getenv("OPENAI_API_KEY")
+}
+
+func getOpenAIModel() string {
+	config, err := loadConfig()
+	if err == nil && config.OpenAIModel != "" {
+		return config.OpenAIModel
+	}
+	model := os.Getenv("OPENAI_MODEL")
+	if model == "" {
+		model = "gpt-4o"
+	}
+	return model
+}
+
+func getAzureOpenAIAPIKey() string {
+	config, err := loadConfig()
+	if err == nil && config.AzureOpenAIAPIKey != "" {
+		return config.AzureOpenAIAPIKey
+	}
+	return os.Getenv("AZURE_OPENAI_API_KEY")
+}
+
+func getAzureOpenAIEndpoint() string {
+	config, err := loadConfig()
+	if err == nil && config.AzureOpenAIEndpoint != "" {
+		return config.AzureOpenAIEndpoint
+	}
+	return os.Getenv("AZURE_OPENAI_ENDPOINT")
+}
+
+func getAzureOpenAIDeployment() string {
+	config, err := loadConfig()
+	if err == nil && config.AzureOpenAIDeployment != "" {
+		return config.AzureOpenAIDeployment
+	}
+	return os.Getenv("AZURE_OPENAI_DEPLOYMENT")
+}
+
+func getOpenAIClient() (*azopenai.Client, string, error) {
+	key := getOpenAIAPIKey()
+	if key != "" {
+		keyCredential := azcore.NewKeyCredential(key)
+
+		client, err := azopenai.NewClientForOpenAI("https://api.openai.com/v1", keyCredential, nil)
+		if err != nil {
+			return nil, "", fmt.Errorf("error creating Azure OpenAI client: %w", err)
+		}
+		return client, getOpenAIModel(), nil
+	} else {
+		// try azure
+		endpoint := getAzureOpenAIEndpoint()
+		key := getAzureOpenAIAPIKey()
+		deployment := getAzureOpenAIDeployment()
+		if endpoint != "" && key != "" && deployment != "" {
+			keyCredential := azcore.NewKeyCredential(key)
+			client, err := azopenai.NewClientWithKeyCredential(endpoint, keyCredential, nil)
+			if err != nil {
+				return nil, "", fmt.Errorf("error creating Azure OpenAI client: %w", err)
+			}
+			return client, deployment, nil
+		} else {
+			err := fmt.Errorf("error creating Azure OpenAI client")
+			return nil, deployment, err
+		}
+	}
 }
 
 func PromptImage(img *image.RGBA, systemPrompt, userPrompt string) string {
@@ -63,14 +132,7 @@ func PromptImage(img *image.RGBA, systemPrompt, userPrompt string) string {
 	}
 	base64Img := base64.StdEncoding.EncodeToString(buf.Bytes())
 
-	// Initialize Azure OpenAI client
-	key := getAPIKey()
-	if key == "" {
-		return "Error: OpenAI API key not found in config file or environment variable"
-	}
-	keyCredential := azcore.NewKeyCredential(key)
-
-	client, err := azopenai.NewClientForOpenAI("https://api.openai.com/v1", keyCredential, nil)
+	client, model, err := getOpenAIClient()
 	if err != nil {
 		return "Error creating Azure OpenAI client: " + err.Error()
 	}
@@ -100,7 +162,7 @@ func PromptImage(img *image.RGBA, systemPrompt, userPrompt string) string {
 			},
 		},
 		MaxTokens:      to.Ptr[int32](1024),
-		DeploymentName: to.Ptr("gpt-4o"),
+		DeploymentName: to.Ptr(model),
 	}, nil)
 	if err != nil {
 		fmt.Println("Error getting chat completions:", err.Error())
