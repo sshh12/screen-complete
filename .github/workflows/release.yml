@@ -38,6 +38,6 @@ jobs:
           install-only: true
       -
         name: GoReleaser Release
-        run: goreleaser --rm-dist
+        run: goreleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
