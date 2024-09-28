@@ -6,7 +6,7 @@ before:
 
 builds:
   - id: "ScreenComplete-Win64bit"
-    main: "./"
+    main: "./cmd/screen_complete"
     env:
       - CGO_ENABLED=1
       - CC=x86_64-w64-mingw32-gcc
@@ -17,7 +17,7 @@ builds:
       - amd64
 
   - id: "ScreenComplete-Win32bit"
-    main: "./"
+    main: "./cmd/screen_complete"
     env:
       - CGO_ENABLED=1
       - CC=i686-w64-mingw32-gcc
@@ -28,7 +28,7 @@ builds:
       - 386
 
   - id: "ScreenComplete-OSX"
-    main: "./"
+    main: "./cmd/screen_complete"
     env:
       - CGO_ENABLED=1
     goos:
@@ -59,7 +59,7 @@ checksum:
   name_template: 'checksums.txt'
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 
 changelog:
   sort: asc
