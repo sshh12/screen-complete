@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"image"
-	"strings"
 	"time"
 
 	"bytes"
@@ -57,16 +56,21 @@ func run() {
 			continue
 		}
 
-		// Send screenshot to OpenAI API
-		response := strings.TrimSpace(sendToOpenAI(img))
+		systemPrompt := "You are a screenshot based typing assistant. Given a screenshot (including cursor position, highlighted text), write the command/prompt the user is likely trying to convey to you."
+		userPrompt := "Here's my current screen and cursor position. Convert this context into a prompt that I am likely trying to convey to you. I will always be asking you to type something (rather than click, open a window, etc). Start with 'Please type...'"
+		response := sendToOpenAI(img, systemPrompt, userPrompt)
+		fmt.Println("prompt ->", response)
 
-		fmt.Println("resp ->", response)
+		systemPrompt = "You are a typing assistant. You take a screenshot and a command and type directly onto the screen with your response. Respond only with text that will be typed on the screen. You may not use new lines or special formatting. Keep in mind the formatting the text near the cursor."
+		userPrompt = response
+		result := sendToOpenAI(img, systemPrompt, userPrompt)
+		fmt.Println("result ->", result)
 
-		k.Type(response)
+		k.Type(result)
 	}
 }
 
-func sendToOpenAI(img *image.RGBA) string {
+func sendToOpenAI(img *image.RGBA, systemPrompt, userPrompt string) string {
 	// Convert image to base64
 	var buf bytes.Buffer
 	err := png.Encode(&buf, img)
@@ -87,7 +91,7 @@ func sendToOpenAI(img *image.RGBA) string {
 	// Prepare the chat completion request
 	content := azopenai.NewChatRequestUserMessageContent([]azopenai.ChatCompletionRequestMessageContentPartClassification{
 		&azopenai.ChatCompletionRequestMessageContentPartText{
-			Text: to.Ptr("Here's my current screen and cursor position. Provide text that I should type next or to fill my selection. Respond only with text that will be typed on the screen."),
+			Text: to.Ptr(userPrompt),
 		},
 		&azopenai.ChatCompletionRequestMessageContentPartImage{
 			ImageURL: &azopenai.ChatCompletionRequestMessageContentPartImageURL{
@@ -102,7 +106,7 @@ func sendToOpenAI(img *image.RGBA) string {
 	resp, err := client.GetChatCompletions(ctx, azopenai.ChatCompletionsOptions{
 		Messages: []azopenai.ChatRequestMessageClassification{
 			&azopenai.ChatRequestSystemMessage{
-				Content: to.Ptr("You are a screenshot based magic text completition API. You take a screenshot and intelligently predict what the user is trying to type. If the user has highlighted text that includes '<>'s or '[]'s like <insert title here>, you should interpret that text as a prompt for you answer (generating a title for the text) rather than complete."),
+				Content: to.Ptr(systemPrompt),
 			},
 			&azopenai.ChatRequestUserMessage{
 				Content: content,
