@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/go-vgo/robotgo"
-	"github.com/sshh12/screen-complete/pkg/keyboard"
 	"github.com/sshh12/screen-complete/pkg/llm"
 	"github.com/sshh12/screen-complete/pkg/screenshot"
 
@@ -29,7 +28,8 @@ func run() {
 	timeSinceLastEvent := time.Time{}
 	x1, y1 := 0, 0
 	x2, y2 := 0, 0
-
+	
+	fmt.Println("Ready.")
 	for {
 		<-hk.Keydown()
 		x1, y1 = robotgo.Location()
@@ -43,21 +43,16 @@ func run() {
 		timeSinceLastEvent = time.Now()
 		img := screenshot.CaptureBounds(x1, y1, x2, y2)
 
-		systemPrompt := `You are a screenshot based typing assistant. 
-		// ... existing code ...`
-		userPrompt := "Here's my current screen and cursor position. Respond in the right format."
-		ocr := llm.SendToOpenAI(img, systemPrompt, userPrompt)
-		fmt.Println("ocr ->", ocr)
 
-		systemPrompt = `You are a typing assistant that works by responding to prompts within screenshots.
-		// ... existing code ...`
-		userPrompt = `Replace this text with the question or result of the command being asked: ` + ocr
-		result := llm.SendToOpenAI(img, systemPrompt, userPrompt)
-		fmt.Println("result ->", result)
+		ocr := llm.PromptImage(img, llm.SystemAnalyzeScreenshot, llm.UserAnalyzeScreenshot)
+		fmt.Println("> ", ocr)
+
+		result := llm.PromptImage(img, llm.SystemComplete, ocr)
+		fmt.Println(">> ", result)
 		
 		result = strings.ReplaceAll(result, "\n", " ")
 		result = strings.TrimSpace(result)
 
-		keyboard.TypeString(result)
+		robotgo.TypeStr(result)
 	}
 }
