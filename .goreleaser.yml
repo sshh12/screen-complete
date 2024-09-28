@@ -1,36 +1,44 @@
+version: 2
+
 before:
   hooks:
     - go mod tidy
+
 builds:
-  -
+  - id: "ScreenComplete-Win64bit"
     main: "./"
-    id: "ScreenComplete-64bit"
     env:
       - CGO_ENABLED=1
       - CC=x86_64-w64-mingw32-gcc
       - CXX=x86_64-w64-mingw32-g++
-    goos: [windows]
-    goarch: [amd64]
-  -
+    goos:
+      - windows
+    goarch:
+      - amd64
+
+  - id: "ScreenComplete-Win32bit"
     main: "./"
-    id: "ScreenComplete-32bit"
     env:
       - CGO_ENABLED=1
       - CC=i686-w64-mingw32-gcc
       - CXX=i686-w64-mingw32-g++
-    goos: [windows]
-    goarch: [386]
-  -
+    goos:
+      - windows
+    goarch:
+      - 386
+
+  - id: "ScreenComplete-OSX"
     main: "./"
-    id: "ScreenComplete-OSX"
     env:
       - CGO_ENABLED=1
-    goos: [darwin]
-    goarch: [amd64, arm64]
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
 
 archives:
-  -
-    format_overrides:
+  - format_overrides:
       - goos: windows
         format: zip
       - goos: darwin
@@ -40,18 +48,20 @@ archives:
       - configs/**/*
       - README.md
       - LICENSE
-    replacements:
-      windows: Windows
-      386: i386
-      amd64: x86_64
-      darwin: macOS
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  name_template: "{{ incpatch .Version }}-next"
+
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
