@@ -43,6 +43,7 @@ func run() {
 		timeSinceLastEvent = time.Now()
 		img := screenshot.CaptureBounds(x1, y1, x2, y2)
 
+		fmt.Println("Generating...")
 
 		ocr := llm.PromptImage(img, llm.SystemAnalyzeScreenshot, llm.UserAnalyzeScreenshot)
 		fmt.Println("> ", ocr)
@@ -52,6 +53,9 @@ func run() {
 		
 		result = strings.ReplaceAll(result, "\n", " ")
 		result = strings.TrimSpace(result)
+		if strings.HasPrefix(result, "\"") && strings.HasSuffix(result, "\"") {
+			result = result[1 : len(result)-1]
+		}
 
 		robotgo.TypeStr(result)
 	}
