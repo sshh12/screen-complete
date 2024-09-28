@@ -20,11 +20,20 @@ builds:
       - CXX=i686-w64-mingw32-g++
     goos: [windows]
     goarch: [386]
+  -
+    main: "./"
+    id: "ScreenComplete-OSX"
+    env:
+      - CGO_ENABLED=1
+    goos: [darwin]
+    goarch: [amd64, arm64]
 
 archives:
   -
     format_overrides:
       - goos: windows
+        format: zip
+      - goos: darwin
         format: zip
     files:
       - configs/configs.json
@@ -35,6 +44,7 @@ archives:
       windows: Windows
       386: i386
       amd64: x86_64
+      darwin: macOS
 checksum:
   name_template: 'checksums.txt'
 snapshot:
