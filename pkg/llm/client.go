@@ -1,6 +1,7 @@
 package llm
 
 import (
+	"fmt"
 	"image"
 	"time"
 
@@ -61,7 +62,8 @@ func PromptImage(img *image.RGBA, systemPrompt, userPrompt string) string {
 		DeploymentName: to.Ptr("gpt-4o"),
 	}, nil)
 	if err != nil {
-		return "Error getting chat completions: " + err.Error()
+		fmt.Println("Error getting chat completions:", err.Error())
+		return ""
 	}
 
 	// Extract and return the response
