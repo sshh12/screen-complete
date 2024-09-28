@@ -1,0 +1,47 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+  -
+    main: "./"
+    id: "ScreenComplete-64bit"
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    goos: [windows]
+    goarch: [amd64]
+  -
+    main: "./"
+    id: "ScreenComplete-32bit"
+    env:
+      - CGO_ENABLED=1
+      - CC=i686-w64-mingw32-gcc
+      - CXX=i686-w64-mingw32-g++
+    goos: [windows]
+    goarch: [386]
+
+archives:
+  -
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - configs/configs.json
+      - configs/**/*
+      - README.md
+      - LICENSE
+    replacements:
+      windows: Windows
+      386: i386
+      amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
