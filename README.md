@@ -22,6 +22,7 @@ The UI/UX is extremely minimal, on a page you want to fill in text:
 | Writing text in a google doc | ![chrome_lOtDKw9Vsd](https://github.com/user-attachments/assets/eb7e2a84-52e5-480c-9fd8-b744c3b04f13) |
 | Filling in the title of a GitHub issue | ![chrome_rLIIqjoeJE](https://github.com/user-attachments/assets/257c990f-fcfd-46cf-b0c8-d0c6a28e6137) | 
 | Drafting a reddit comment | ![chrome_lnoue13hYT](https://github.com/user-attachments/assets/0f3a263c-8ab6-42da-8985-2369a2fadd5e) |
+| Drafting a slack reply | ![chrome_](https://github.com/user-attachments/assets/3ab87654-2d50-4aa2-bb9c-f25d467d7bc6) |
 
 
 ## Configuration
